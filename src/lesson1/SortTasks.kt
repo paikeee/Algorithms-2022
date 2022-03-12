@@ -2,6 +2,9 @@
 
 package lesson1
 
+import java.io.File
+import kotlin.math.abs
+
 /**
  * Сортировка времён
  *
@@ -62,8 +65,26 @@ fun sortTimes(inputName: String, outputName: String) {
  *
  * В случае обнаружения неверного формата файла бросить любое исключение.
  */
+// Время: O(N*logN)
+// Память: S(N)
 fun sortAddresses(inputName: String, outputName: String) {
-    TODO()
+    val addressBook = sortedMapOf<String, MutableList<String>>(compareBy<String> {
+        it.split(" ")[0]
+    }.thenBy { it.split(" ")[1].toInt() })
+    File(inputName).forEachLine { line ->
+        require(line.matches(Regex("[А-Яа-я-Ёё]+ [А-Яа-я-Ёё]+ - [А-Яа-я-Ёё]+ \\d+")))
+        val nameAddress = line.split(" - ")
+        val name = nameAddress[0]
+        val address = nameAddress[1]
+        addressBook.getOrPut(address) { mutableListOf() }.add(name)
+    }
+    File(outputName).bufferedWriter().use { writer ->
+        addressBook.forEach { (address, names) ->
+            names.sort()
+            writer.write(address + " - " + names.joinToString(", "))
+            writer.newLine()
+        }
+    }
 }
 
 /**
@@ -96,8 +117,27 @@ fun sortAddresses(inputName: String, outputName: String) {
  * 99.5
  * 121.3
  */
+// Время: O(N)
+// Память: S(N)
 fun sortTemperatures(inputName: String, outputName: String) {
-    TODO()
+    val temp = Array(7731) { 0 }
+    File(inputName).forEachLine { line ->
+        val value = line.replace(".", "").toInt() + 2730
+        temp[value] += 1
+    }
+    File(outputName).bufferedWriter().use { writer ->
+        for (i in 0..7730) {
+            for (j in 1..temp[i]) {
+                writer.write(
+                    "${
+                        if (i - 2730 < 0 && i - 2730 > -10)
+                            "-" + ((i - 2730) / 10)
+                        else (i - 2730) / 10
+                    }.${(abs((i - 2730) % 10))}\n"
+                )
+            }
+        }
+    }
 }
 
 /**

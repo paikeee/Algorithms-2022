@@ -2,6 +2,8 @@
 
 package lesson2
 
+import kotlin.math.sqrt
+
 /**
  * Получение наибольшей прибыли (она же -- поиск максимального подмассива)
  * Простая
@@ -94,8 +96,31 @@ fun josephTask(menNumber: Int, choiceInterval: Int): Int {
  * Если имеется несколько самых длинных общих подстрок одной длины,
  * вернуть ту из них, которая встречается раньше в строке first.
  */
+// Время: O(N*M)
+// Память: S(N*M)
 fun longestCommonSubstring(first: String, second: String): String {
-    TODO()
+    if (first == "" || second == "")
+        return ""
+    val matrix = Array(first.length) { Array(second.length) { 0 } }
+    var maxValue = 0
+    var maxIndex = 0
+    first.forEachIndexed { i, firstChar ->
+        second.forEachIndexed { j, secondChar ->
+            if (firstChar == secondChar) {
+                if (i > 0 && j > 0)
+                    matrix[i][j] = 1 + matrix[i - 1][j - 1]
+                else matrix[i][j]++
+
+                if (matrix[i][j] > maxValue) {
+                    maxValue = matrix[i][j]
+                    maxIndex = i
+                }
+            }
+        }
+    }
+    return if (maxValue != 0)
+        first.substring(maxIndex - maxValue + 1, maxIndex + 1)
+    else ""
 }
 
 /**
@@ -108,6 +133,34 @@ fun longestCommonSubstring(first: String, second: String): String {
  * Справка: простым считается число, которое делится нацело только на 1 и на себя.
  * Единица простым числом не считается.
  */
+// Реализовано решето Аткина
+// Время О(N)
+// Память S(N^(1/2+o(1)))
 fun calcPrimesNumber(limit: Int): Int {
-    TODO()
+    if (limit <= 1) return 0
+    val primes = MutableList(limit + 1) { false }
+    val sqrtLimit = sqrt(limit.toDouble()).toInt()
+    for (x in 1..sqrtLimit) {
+        for (y in 1..sqrtLimit) {
+            val x2 = x * x
+            val y2 = y * y
+            var num = 4 * x2 + y2
+            if (num <= limit && (num % 12 == 1 || num % 12 == 5))
+                primes[num] = !primes[num]
+            num -= x2
+            if (num <= limit && num % 12 == 7)
+                primes[num] = !primes[num]
+            num -= 2 * y2
+            if (x > y && num <= limit && num % 12 == 11)
+                primes[num] = !primes[num]
+        }
+    }
+    for (i in 5..sqrtLimit)
+        if (primes[i]) {
+            val i2 = i * i
+            for (j in i2..limit step i2)
+                primes[j] = false
+        }
+    return if (limit > 2) primes.count { it } + 2 // учитывая числа 2 и 3
+    else primes.count { it } + 1 // учитывая число 2
 }
