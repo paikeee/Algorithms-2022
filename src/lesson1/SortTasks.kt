@@ -3,7 +3,6 @@
 package lesson1
 
 import java.io.File
-import kotlin.math.abs
 
 /**
  * Сортировка времён
@@ -66,11 +65,26 @@ fun sortTimes(inputName: String, outputName: String) {
  * В случае обнаружения неверного формата файла бросить любое исключение.
  */
 // Время: O(N*logN)
-// Память: S(N)
+// Память: O(N)
+
 fun sortAddresses(inputName: String, outputName: String) {
-    val addressBook = sortedMapOf<String, MutableList<String>>(compareBy<String> {
-        it.split(" ")[0]
-    }.thenBy { it.split(" ")[1].toInt() })
+
+    val comparator = Comparator<String> { address, otherAddress ->
+        val streetHouse = address.split(" ")
+        val street = streetHouse[0]
+        val house = streetHouse[1]
+
+        val otherStreetHouse = otherAddress.split(" ")
+        val otherStreet = otherStreetHouse[0]
+        val otherHouse = otherStreetHouse[1]
+
+        val comparison = street.compareTo(otherStreet)
+        return@Comparator if (comparison == 0)
+            house.toInt() - otherHouse.toInt()
+        else comparison
+    }
+
+    val addressBook = sortedMapOf<String, MutableList<String>>(comparator)
     File(inputName).forEachLine { line ->
         require(line.matches(Regex("[А-Яа-я-Ёё]+ [А-Яа-я-Ёё]+ - [А-Яа-я-Ёё]+ \\d+")))
         val nameAddress = line.split(" - ")
@@ -118,7 +132,7 @@ fun sortAddresses(inputName: String, outputName: String) {
  * 121.3
  */
 // Время: O(N)
-// Память: S(N)
+// Память: O(N)
 fun sortTemperatures(inputName: String, outputName: String) {
     val temp = Array(7731) { 0 }
     File(inputName).forEachLine { line ->
@@ -126,17 +140,9 @@ fun sortTemperatures(inputName: String, outputName: String) {
         temp[value] += 1
     }
     File(outputName).bufferedWriter().use { writer ->
-        for (i in 0..7730) {
-            for (j in 1..temp[i]) {
-                writer.write(
-                    "${
-                        if (i - 2730 < 0 && i - 2730 > -10)
-                            "-" + ((i - 2730) / 10)
-                        else (i - 2730) / 10
-                    }.${(abs((i - 2730) % 10))}\n"
-                )
-            }
-        }
+        for (i in 0..7730)
+            for (j in 1..temp[i])
+                writer.write("${(i - 2730).toDouble() / 10}\n")
     }
 }
 

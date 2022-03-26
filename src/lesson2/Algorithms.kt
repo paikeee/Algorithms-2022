@@ -97,7 +97,7 @@ fun josephTask(menNumber: Int, choiceInterval: Int): Int {
  * вернуть ту из них, которая встречается раньше в строке first.
  */
 // Время: O(N*M)
-// Память: S(N*M)
+// Память: O(N*M)
 fun longestCommonSubstring(first: String, second: String): String {
     if (first == "" || second == "")
         return ""
@@ -134,8 +134,8 @@ fun longestCommonSubstring(first: String, second: String): String {
  * Единица простым числом не считается.
  */
 // Реализовано решето Аткина
-// Время О(N)
-// Память S(N^(1/2+o(1)))
+// Время О(N/ln(lnN))
+// Память O(N^(1/2+o(1)))
 fun calcPrimesNumber(limit: Int): Int {
     if (limit <= 1) return 0
     val primes = MutableList(limit + 1) { false }
