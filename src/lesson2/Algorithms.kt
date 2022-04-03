@@ -134,33 +134,40 @@ fun longestCommonSubstring(first: String, second: String): String {
  * Единица простым числом не считается.
  */
 // Реализовано решето Аткина
-// Время О(N/ln(lnN))
-// Память O(N^(1/2+o(1)))
+// Время О(N)
+// Память O(N)
 fun calcPrimesNumber(limit: Int): Int {
     if (limit <= 1) return 0
-    val primes = MutableList(limit + 1) { false }
+    val primes = MutableList(limit + 1) { false } // Память O(N)
     val sqrtLimit = sqrt(limit.toDouble()).toInt()
-    for (x in 1..sqrtLimit) {
-        for (y in 1..sqrtLimit) {
-            val x2 = x * x
-            val y2 = y * y
-            var num = 4 * x2 + y2
+    var x2 = 0
+    // Общее время = O(N)
+    for (x in 1..sqrtLimit) { // Время O(sqrt(N))
+        x2 += x.shl(1) - 1 // оптимизация нахождения квадрата числа (аналогично для y2)
+        var y2 = 0
+        for (y in 1..sqrtLimit) { // Время O(sqrt(N))
+            y2 += y.shl(1) - 1
+            var num = x2.shl(2) + y2
             if (num <= limit && (num % 12 == 1 || num % 12 == 5))
                 primes[num] = !primes[num]
             num -= x2
             if (num <= limit && num % 12 == 7)
                 primes[num] = !primes[num]
-            num -= 2 * y2
+            num -= y2.shl(1)
             if (x > y && num <= limit && num % 12 == 11)
                 primes[num] = !primes[num]
         }
     }
-    for (i in 5..sqrtLimit)
+    // Отсеивание квадратов простых чисел
+    // Время = O(sqrt(N) * ln(ln(N)) / 2)
+    for (i in 5..sqrtLimit step 2) // Время O(sqrt(N) / 2)
         if (primes[i]) {
             val i2 = i * i
+            // Сумма гармонического ряда простых чисел по формуле Мертенса ln(ln(N))
             for (j in i2..limit step i2)
                 primes[j] = false
         }
     return if (limit > 2) primes.count { it } + 2 // учитывая числа 2 и 3
     else primes.count { it } + 1 // учитывая число 2
+    // Общее время ~ O(N + sqrt(N) * ln(ln(N)) / 2) ~ O(N)
 }

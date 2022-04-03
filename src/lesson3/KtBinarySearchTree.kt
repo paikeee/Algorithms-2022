@@ -11,6 +11,7 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
     ) {
         var left: Node<T>? = null
         var right: Node<T>? = null
+        var parent: Node<T>? = null
     }
 
     private var root: Node<T>? = null
@@ -57,10 +58,12 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
             comparison < 0 -> {
                 assert(closest.left == null)
                 closest.left = newNode
+                newNode.parent = closest
             }
             else -> {
                 assert(closest.right == null)
                 closest.right = newNode
+                newNode.parent = closest
             }
         }
         size++
@@ -79,8 +82,41 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
      *
      * Средняя
      */
+    // Время: зависит от find(). В лучшем случае O(1), в худшем O(N)
+    // Память: O(1)
     override fun remove(element: T): Boolean {
-        TODO()
+
+        val closest = find(element) ?: return false
+        if (closest.value != element) return false
+        size--
+
+        // Функция обмена поддеревьев
+        fun exchange(first: Node<T>, second: Node<T>?) {
+            when {
+                first.parent == null -> root = second
+                first.parent!!.right == first -> first.parent!!.right = second
+                else -> first.parent!!.left = second
+            }
+            if (second != null) first.parent = second.right
+        }
+
+        when {
+            closest.left == null -> exchange(closest, closest.right)
+            closest.right == null -> exchange(closest, closest.left)
+            else -> {
+                var subTree = closest.right
+                while (subTree!!.left != null) subTree = subTree.left
+                if (subTree.parent != closest) {
+                    exchange(subTree, subTree.right)
+                    subTree.right = closest.right
+                    subTree.right!!.parent = subTree
+                }
+                exchange(closest, subTree)
+                subTree.left = closest.left
+                subTree.left!!.parent = subTree
+            }
+        }
+        return true
     }
 
     override fun comparator(): Comparator<in T>? =
@@ -90,6 +126,22 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
         BinarySearchTreeIterator()
 
     inner class BinarySearchTreeIterator internal constructor() : MutableIterator<T> {
+
+        private var stack = Stack<Node<T>>()
+        private var current = root
+        private var parentOfCurrent: Node<T>? = null
+
+        init {
+            if (current != null) addStack(current!!)
+        }
+
+        // Время O(N)
+        // Память O(N)
+        private fun addStack(node: Node<T>) {
+            if (node.right != null) addStack(node.right!!)
+            stack.push(node)
+            if (node.left != null) addStack(node.left!!)
+        }
 
         /**
          * Проверка наличия следующего элемента
@@ -101,10 +153,10 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
          *
          * Средняя
          */
-        override fun hasNext(): Boolean {
-            // TODO
-            throw NotImplementedError()
-        }
+
+        // Время - O(1)
+        override fun hasNext(): Boolean = stack.isNotEmpty()
+
 
         /**
          * Получение следующего элемента
@@ -119,9 +171,14 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
          *
          * Средняя
          */
+
+        // Время - O(1)
         override fun next(): T {
-            // TODO
-            throw NotImplementedError()
+            if (!hasNext()) throw NoSuchElementException()
+            current = stack.pop()
+            parentOfCurrent = current
+            current = current?.right
+            return parentOfCurrent!!.value
         }
 
         /**
@@ -136,11 +193,13 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
          *
          * Сложная
          */
+        // Время: зависит от find(). В лучшем случае O(1), в худшем O(N)
+        // Память: O(1)
         override fun remove() {
-            // TODO
-            throw NotImplementedError()
+            if (parentOfCurrent == null) throw IllegalStateException()
+            remove(parentOfCurrent!!.value)
+            parentOfCurrent = null
         }
-
     }
 
     /**
