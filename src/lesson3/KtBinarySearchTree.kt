@@ -97,7 +97,6 @@ class KtBinarySearchTree<T : Comparable<T>> : AbstractMutableSet<T>(), Checkable
                 first.parent!!.right == first -> first.parent!!.right = second
                 else -> first.parent!!.left = second
             }
-            if (second != null) first.parent = second.right
         }
 
         when {
