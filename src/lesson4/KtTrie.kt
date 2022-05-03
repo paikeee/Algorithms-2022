@@ -1,7 +1,6 @@
 package lesson4
 
-import java.lang.IllegalStateException
-import java.lang.StringBuilder
+import java.lang.*
 import java.util.*
 
 /**
@@ -15,9 +14,6 @@ class KtTrie : AbstractMutableSet<String>(), MutableSet<String> {
 
     private val root = Node()
 
-    private var deleteNode = root
-    private var deleteChar = 0.toChar()
-
     override var size: Int = 0
         private set
 
@@ -25,6 +21,9 @@ class KtTrie : AbstractMutableSet<String>(), MutableSet<String> {
         root.children.clear()
         size = 0
     }
+
+    private var deleteNode = root
+    private var deleteChar = 0.toChar()
 
     private fun String.withZero() = this + 0.toChar()
 
@@ -43,7 +42,6 @@ class KtTrie : AbstractMutableSet<String>(), MutableSet<String> {
             check(char)
             current = current.children[char] ?: return null
         }
-
         check(0.toChar())
         return current
     }
@@ -94,9 +92,8 @@ class KtTrie : AbstractMutableSet<String>(), MutableSet<String> {
         private var foundWords = 0
         private var word = StringBuilder()
         private var current = root
-        private var charSetForNode = mutableMapOf<Node, Set<Char>>()
-        private var lengthNode = mutableMapOf<Node, Int>()
-        private var stack = Stack<Node>()
+        private val charSetForNode = mutableMapOf<Node, Set<Char>>() // потомки узла
+        private val stack = Stack<Pair<Node, Int>>() // узел to расстояние от root
         private var last = ""
 
         // Время: O(N)
@@ -111,48 +108,47 @@ class KtTrie : AbstractMutableSet<String>(), MutableSet<String> {
                 charSetForNode[current] = charSetForNode[current]!! - char
             }
 
+            var keys = current.children.keys
             // Поиск слова
-            while (!current.children.containsKey(0.toChar()) && current.children.keys.size != 0) {
-                if (!charSetForNode.containsKey(current)) {
-                    charSetForNode[current] = current.children.keys
-                }
-                if (current.children.keys.size > 1) {
-                    stack.add(current)
+            while (0.toChar() !in keys && keys.size != 0) {
+                if (current !in charSetForNode) {
+                    charSetForNode[current] = keys
                 }
                 val char = charSetForNode[current]!!.first()
                 wordAppend(char)
-                lengthNode[current] = word.length - 1
+                if (keys.size > 1) {
+                    stack.push(current to word.length - 1)
+                }
                 current = current.children[char]!!
+                keys = current.children.keys
             }
 
-            val result = word.toString()
-            last = result
+            last = word.toString()
             foundWords++
 
             // Переход на следующую ветку
-            if (current.children.keys.size > 1) {
-                if (!charSetForNode.containsKey(current)) {
-                    charSetForNode[current] = current.children.keys - 0.toChar()
+            if (keys.size > 1) {
+                if (current !in charSetForNode) {
+                    charSetForNode[current] = keys - 0.toChar()
                 }
                 val char = charSetForNode[current]!!.first()
                 wordAppend(char)
                 if (charSetForNode[current]!!.isNotEmpty()) {
-                    stack.add(current)
+                    stack.push(current to word.length - 1)
                 }
-                lengthNode[current] = word.length - 1
                 current = current.children[char]!!
             } else if (stack.isNotEmpty()) { // Если отсутствует ветка-сосед, переходим к родителю
-                current = stack.lastElement()
-                word.delete(lengthNode[current]!!, word.length)
+                current = stack.peek().first
+                word.delete(stack.peek().second, word.length)
                 val char = charSetForNode[current]!!.first()
                 wordAppend(char)
                 if (charSetForNode[current]!!.isEmpty()) {
-                    stack.removeLast()
+                    stack.pop()
                 }
                 current = current.children[char]!!
             }
 
-            return result
+            return last
         }
 
         // Время: O(1)
@@ -163,7 +159,8 @@ class KtTrie : AbstractMutableSet<String>(), MutableSet<String> {
         // Память: O(1)
         override fun remove() {
             if (last == "") throw IllegalStateException()
-            if (remove(last)) foundWords--
+            remove(last)
+            foundWords--
             last = ""
         }
     }

@@ -131,7 +131,7 @@ class KtOpenAddressingSet<T : Any>(private val bits: Int) : AbstractMutableSet<T
 
         // Время: O(1)
         // Память: O(1)
-        override fun hasNext(): Boolean = index != maxIndex + 1
+        override fun hasNext(): Boolean = index - 1 != maxIndex
 
         // Время: O(1)
         // Память: O(1)
